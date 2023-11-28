@@ -26,7 +26,7 @@ public class DriveWithFourBar extends LinearOpMode {
         front_right_drive = hardwareMap.get(DcMotor.class, "front_right_drive");
         rear_right_drive = hardwareMap.get(DcMotor.class, "rear_right_drive");
 
-        arm_motor_a = hardwareMap.get(DcMotor.class, "arm_motor_a");
+        arm_motor_a = hardwareMap.get(DcMotor.class, "FourBarLiftKitA");
 
         // Put initialization blocks here.
         front_left_drive.setDirection(DcMotorSimple.Direction.REVERSE);
