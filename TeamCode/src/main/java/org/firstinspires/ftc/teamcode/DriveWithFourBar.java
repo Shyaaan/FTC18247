@@ -38,10 +38,12 @@ public class DriveWithFourBar extends LinearOpMode {
             // Put run blocks here.
             while (opModeIsActive()) {
                 // Put loop blocks here.
-                //drive();
-                telemetry.addLine("Motor A Position: " + ( (DcMotorEx) arm_motor_a).getCurrentPosition());
+                drive();
+                telemetry.addLine("Motor A Position: " + String.valueOf(arm_motor_a.getCurrentPosition()));
                 telemetry.update();
+                sleep(20);
             }
+            ((DcMotorEx) arm_motor_a).setVelocity(0);
         }
     }
 
@@ -71,11 +73,10 @@ public class DriveWithFourBar extends LinearOpMode {
 
         //Arm controls
 
-        float LeftArmY = -gamepad2.left_stick_y;
-        float RightArmX = -gamepad2.right_stick_x;
+        float LeftArmY = gamepad2.left_stick_y;
+        float RightArmY = gamepad2.right_stick_y;
 
-        Collective = 200;
-        Individual = 200;
+        double Speed = 20 * RightArmY;
 
         //if (Collective > 200){
         //    Collective = 200;
@@ -85,21 +86,22 @@ public class DriveWithFourBar extends LinearOpMode {
         //}
 
 
-        if (Individual < 0){
+        //if (Speed < 0){
             //((DcMotorEx) arm_motor_b).setVelocity(Individual + Collective);
-            ((DcMotorEx) arm_motor_a).setVelocity(Collective);
-        } else {
-            ((DcMotorEx) arm_motor_a).setVelocity(Individual + Collective);
+            //((DcMotorEx) arm_motor_a).setVelocity(Speed);
+        //} else {
+            //((DcMotorEx) arm_motor_a).setVelocity(Speed);
             //((DcMotorEx) arm_motor_b).setVelocity(Collective);
-        }
-
+        //}
+        ((DcMotorEx) arm_motor_a).setVelocity(Speed);
+        telemetry.addLine("Speed: " + Speed);
         vertical = SpeedFormula(LeftStickY) * 2700;
         horizontal = SpeedFormula(LeftStickX) * 2700;
         pivot = SpeedFormula(-RightStickX) * 2700;
-        ((DcMotorEx) front_left_drive).setVelocity((vertical - horizontal) + pivot);
-        ((DcMotorEx) front_right_drive).setVelocity((vertical + horizontal) - pivot);
-        ((DcMotorEx) rear_left_drive).setVelocity(vertical + horizontal + pivot);
-        ((DcMotorEx) rear_right_drive).setVelocity((vertical - horizontal) - pivot);
+        //((DcMotorEx) front_left_drive).setVelocity((vertical - horizontal) + pivot);
+        //((DcMotorEx) front_right_drive).setVelocity((vertical + horizontal) - pivot);
+        //((DcMotorEx) rear_left_drive).setVelocity(vertical + horizontal + pivot);
+        //((DcMotorEx) rear_right_drive).setVelocity((vertical - horizontal) - pivot);
     }
     private double SpeedFormula(float x){
         return x/3 + 2.0/3.0*Math.pow(x,5);
