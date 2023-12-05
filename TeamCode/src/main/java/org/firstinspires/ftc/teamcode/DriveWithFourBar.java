@@ -27,7 +27,8 @@ public class DriveWithFourBar extends LinearOpMode {
         rear_right_drive = hardwareMap.get(DcMotor.class, "rear_right_drive");
 
         arm_motor_a = hardwareMap.get(DcMotor.class, "FourBarLiftKitA");
-
+        arm_motor_a.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        arm_motor_a.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         // Put initialization blocks here.
         front_left_drive.setDirection(DcMotorSimple.Direction.REVERSE);
         rear_left_drive.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -39,11 +40,13 @@ public class DriveWithFourBar extends LinearOpMode {
             while (opModeIsActive()) {
                 // Put loop blocks here.
                 drive();
-                telemetry.addLine("Motor A Position: " + String.valueOf(arm_motor_a.getCurrentPosition()));
+                int position = arm_motor_a.getCurrentPosition();
+                telemetry.addLine("Motor A Position: " + String.valueOf(position));
                 telemetry.update();
                 sleep(20);
             }
             ((DcMotorEx) arm_motor_a).setVelocity(0);
+            arm_motor_a.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         }
     }
 
@@ -76,25 +79,23 @@ public class DriveWithFourBar extends LinearOpMode {
         float LeftArmY = gamepad2.left_stick_y;
         float RightArmY = gamepad2.right_stick_y;
 
-        double Speed = 20 * RightArmY;
+        double SpeedCoefficient = 100;
+        double Speed = SpeedCoefficient * RightArmY;
 
-        //if (Collective > 200){
-        //    Collective = 200;
-        //}
-        //if (Individual > 200){
-        //    Individual = 200;
-        //}
+        int Position =  arm_motor_a.getCurrentPosition();
+        int Limit = -2220;
 
+        if (Position <= .95 * Limit){
+            Speed = 1.0/2.0*Speed;
+        }
+        if (Position < Limit) {
+            Speed = SpeedCoefficient;
+        }
 
-        //if (Speed < 0){
-            //((DcMotorEx) arm_motor_b).setVelocity(Individual + Collective);
-            //((DcMotorEx) arm_motor_a).setVelocity(Speed);
-        //} else {
-            //((DcMotorEx) arm_motor_a).setVelocity(Speed);
-            //((DcMotorEx) arm_motor_b).setVelocity(Collective);
-        //}
         ((DcMotorEx) arm_motor_a).setVelocity(Speed);
-        telemetry.addLine("Speed: " + Speed);
+
+        telemetry.addLine("Right Stick Y: " + RightArmY + " Speed: " + Speed);
+
         vertical = SpeedFormula(LeftStickY) * 2700;
         horizontal = SpeedFormula(LeftStickX) * 2700;
         pivot = SpeedFormula(-RightStickX) * 2700;
