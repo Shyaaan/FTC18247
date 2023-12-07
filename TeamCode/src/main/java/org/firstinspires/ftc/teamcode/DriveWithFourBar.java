@@ -18,7 +18,7 @@ public class DriveWithFourBar extends LinearOpMode {
     private DcMotorEx arm_motor_a;
     private DcMotorEx arm_motor_b;
 
-    private int[] motor_positions = new int[10];
+    private int[] motor_positions = {0,0,0,0,0};
 
     /**
      * This function is executed when this Op Mode is selected from the Driver Station.
@@ -31,17 +31,13 @@ public class DriveWithFourBar extends LinearOpMode {
         rear_right_drive = (DcMotorEx) hardwareMap.get(DcMotor.class, "rear_right_drive");
 
         arm_motor_a = (DcMotorEx) hardwareMap.get(DcMotor.class, "FourBarLiftKitA");
-        arm_motor_a.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        arm_motor_a.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        arm_motor_b = (DcMotorEx) hardwareMap.get(DcMotor.class, "FourBarLiftKitB");
+        ResetMotor(arm_motor_a);
+        ResetMotor(arm_motor_b);
         // Put initialization blocks here.
         front_left_drive.setDirection(DcMotorSimple.Direction.REVERSE);
         rear_left_drive.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        ((DcMotorEx) arm_motor_a).setVelocity(-100);
-        sleep(100);
-        ((DcMotorEx) arm_motor_a).setVelocity(0);
-        arm_motor_a.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        arm_motor_a.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         waitForStart();
 
         if (opModeIsActive()) {
@@ -54,8 +50,8 @@ public class DriveWithFourBar extends LinearOpMode {
                 telemetry.update();
                 sleep(20);
             }
-            ((DcMotorEx) arm_motor_a).setVelocity(0);
-            arm_motor_a.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            arm_motor_a.setVelocity(0);
+            arm_motor_b.setVelocity(0);
         }
     }
 
@@ -89,9 +85,8 @@ public class DriveWithFourBar extends LinearOpMode {
         float RightArmY = gamepad2.right_stick_y;
 
         ControlArm(arm_motor_a,RightArmY);
+        ControlArm(arm_motor_b,LeftArmY);
 
-        telemetry.addLine("Right Stick Y: " + RightArmY);
-        telemetry.addLine("Run Mode: " + arm_motor_a.getMode().toString() + " Target Position: " + arm_motor_a.getTargetPosition());
         vertical = SpeedFormula(LeftStickY) * 2700;
         horizontal = SpeedFormula(LeftStickX) * 2700;
         pivot = SpeedFormula(-RightStickX) * 2700;
@@ -124,13 +119,19 @@ public class DriveWithFourBar extends LinearOpMode {
             motor_positions[motor.getPortNumber()] = position;
         }
         else {
-            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             motor.setTargetPosition(motor_positions[motor.getPortNumber()]);
+            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             motor.setPower(.3);
         }
-
+        telemetry.addLine("Motor: " + motor.getPortNumber() + " Position: " + motor.getCurrentPosition());
         telemetry.addLine("Controller: " + controller + " Speed: " + speed);
         telemetry.addLine("Run Mode: " + motor.getMode().toString() + " Target Position: " + motor.getTargetPosition());
     }
-
+    private void ResetMotor(DcMotorEx motor) {
+        motor.setVelocity(-100);
+        sleep(100);
+        motor.setVelocity(0);
+        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
 }
