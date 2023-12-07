@@ -6,10 +6,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
-import java.lang.reflect.Array;
-
-@TeleOp(name = "Drive_With_FourBarV2")
-public class DriveWithFourBar extends LinearOpMode {
+@TeleOp(name = "Drive_With_FourBarV1")
+public class DriveWithFourBarOneArmBackup extends LinearOpMode {
 
     private DcMotorEx front_left_drive;
     private DcMotorEx rear_left_drive;
@@ -18,7 +16,7 @@ public class DriveWithFourBar extends LinearOpMode {
     private DcMotorEx arm_motor_a;
     private DcMotorEx arm_motor_b;
 
-    private int[] motor_positions = new int[10];
+    private int arm_a_position = 0;
 
     /**
      * This function is executed when this Op Mode is selected from the Driver Station.
@@ -49,6 +47,8 @@ public class DriveWithFourBar extends LinearOpMode {
             while (opModeIsActive()) {
                 // Put loop blocks here.
                 int position = arm_motor_a.getCurrentPosition();
+                float LeftStickY = gamepad2.left_stick_y;
+                float RightStickY = gamepad2.right_stick_y;
                 drive();
                 telemetry.addLine("Motor A Position: " + position);
                 telemetry.update();
@@ -88,9 +88,31 @@ public class DriveWithFourBar extends LinearOpMode {
         float LeftArmY = gamepad2.left_stick_y;
         float RightArmY = gamepad2.right_stick_y;
 
-        ControlArm(arm_motor_a,RightArmY);
+        double SpeedCoefficient = 100;
+        double Speed = SpeedCoefficient * RightArmY;
 
-        telemetry.addLine("Right Stick Y: " + RightArmY);
+        int position =  arm_motor_a.getCurrentPosition();
+        int Limit = -2220;
+
+        if (position <= .95 * Limit){
+            Speed = 1.0/2.0*Speed;
+        }
+        if (position <= .995 * Limit) {
+            Speed = SpeedCoefficient;
+        }
+
+        if (Math.abs(Speed) > 5) {
+            ((DcMotorEx) arm_motor_a).setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            ((DcMotorEx) arm_motor_a).setVelocity(Speed);
+            arm_a_position = position;
+        }
+        else {
+            ((DcMotorEx) arm_motor_a).setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            ((DcMotorEx) arm_motor_a).setTargetPosition(arm_a_position);
+            arm_motor_a.setPower(.3);
+        }
+
+        telemetry.addLine("Right Stick Y: " + RightArmY + " Speed: " + Speed);
         telemetry.addLine("Run Mode: " + arm_motor_a.getMode().toString() + " Target Position: " + arm_motor_a.getTargetPosition());
         vertical = SpeedFormula(LeftStickY) * 2700;
         horizontal = SpeedFormula(LeftStickX) * 2700;
@@ -102,35 +124,6 @@ public class DriveWithFourBar extends LinearOpMode {
     }
     private double SpeedFormula(float x){
         return x/3 + 2.0/3.0*Math.pow(x,5);
-    }
-    private void ControlArm(DcMotorEx motor, float controller) {
-        double speed_coefficient = 100;
-        double speed = speed_coefficient * controller;
-        
-        int position =  motor.getCurrentPosition();
-        int limit = -2220;
-        
-
-        if (position <= .95 * limit){
-            speed = 1.0/2.0*speed;
-        }
-        if (position <= .995 * limit) {
-            speed = speed_coefficient;
-        }
-
-        if (Math.abs(speed) > 5) {
-            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            motor.setVelocity(speed);
-            motor_positions[motor.getPortNumber()] = position;
-        }
-        else {
-            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            motor.setTargetPosition(motor_positions[motor.getPortNumber()]);
-            motor.setPower(.3);
-        }
-
-        telemetry.addLine("Controller: " + controller + " Speed: " + speed);
-        telemetry.addLine("Run Mode: " + motor.getMode().toString() + " Target Position: " + motor.getTargetPosition());
     }
 
 }
