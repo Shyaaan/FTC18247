@@ -81,7 +81,7 @@ public class DriveWithFourBar extends LinearOpMode {
 
         //Arm controls
 
-        float LeftArmY = gamepad2.left_stick_y;
+        float LeftArmY = -gamepad2.left_stick_y;
         float RightArmY = gamepad2.right_stick_y;
 
         ControlArm(arm_motor_a,RightArmY);
@@ -99,12 +99,11 @@ public class DriveWithFourBar extends LinearOpMode {
         return x/3 + 2.0/3.0*Math.pow(x,5);
     }
     private void ControlArm(DcMotorEx motor, float controller) {
-        double speed_coefficient = 100;
+        double speed_coefficient = 450;
         double speed = speed_coefficient * controller;
         
         int position =  motor.getCurrentPosition();
         int limit = -2220;
-        
 
         if (position <= .95 * limit){
             speed = 1.0/2.0*speed;
@@ -128,6 +127,7 @@ public class DriveWithFourBar extends LinearOpMode {
         telemetry.addLine("Run Mode: " + motor.getMode().toString() + " Target Position: " + motor.getTargetPosition());
     }
     private void ResetMotor(DcMotorEx motor) {
+        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motor.setVelocity(-100);
         sleep(100);
         motor.setVelocity(0);
