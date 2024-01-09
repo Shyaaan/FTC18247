@@ -6,8 +6,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
-import java.lang.reflect.Array;
-
 @TeleOp(name = "Drive_With_FourBarV2")
 public class DriveWithFourBar extends LinearOpMode {
 
@@ -106,10 +104,10 @@ public class DriveWithFourBar extends LinearOpMode {
         int limit = -2220;
 
         if (position <= .95 * limit){
-            speed = 1.0/2.0*speed;
+            //speed = 1.0/2.0*speed;
         }
         if (position <= .995 * limit) {
-            speed = speed_coefficient;
+            //speed = speed_coefficient;
         }
 
         if (Math.abs(speed) > 5) {
