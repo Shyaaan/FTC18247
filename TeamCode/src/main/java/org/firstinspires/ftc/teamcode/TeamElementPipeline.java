@@ -3,6 +3,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+
+import static org.opencv.core.Core.REDUCE_AVG;
 import static org.opencv.core.Core.divide;
 
 import static org.opencv.core.Core.subtract;
@@ -34,15 +36,19 @@ import org.opencv.core.Mat;
 public class TeamElementPipeline extends OpenCvPipeline {
     public static String LEFT = "Left";
     public static String RIGHT = "Right";
+    public static String CENTER = "Center";
+    public static String RED = "Red";
+    public static String BLUE = "Blue";
     ArrayList<Mat> channels = new ArrayList<>(3);
     List<MatOfPoint> filteredContours = new ArrayList<>();
     List<MatOfPoint> contours = new ArrayList<>();
-    Mat r = new Mat();
+    Mat c = new Mat();
     Mat grayImg = new Mat();
     Mat hierarchy = new Mat();
     MatOfPoint2f newContour;
 
-    String Position = "Not Found";
+    String Position = null;
+    String Color = null;
 
     Scalar white = new Scalar(255,255,255);
     Scalar red = new Scalar(255,0,0);
@@ -50,32 +56,16 @@ public class TeamElementPipeline extends OpenCvPipeline {
     public Mat processFrame(Mat input){
         grayImg.release();
         hierarchy.release();
-        r.release();
-        Core.split(input,channels);
-        r = channels.get(0);
-        divide(channels.get(1),new Scalar(2),channels.get(1));
-        divide(channels.get(2),new Scalar(2),channels.get(2));
-        subtract(r,channels.get(1),r);
-        subtract(r,channels.get(2),r);
+        c.release();
 
-        threshold(r,grayImg,80d,255,THRESH_BINARY);
-
-        Imgproc.findContours(grayImg,contours,hierarchy,Imgproc.RETR_TREE,Imgproc.CHAIN_APPROX_SIMPLE);
-
-        for(MatOfPoint contour : contours){
-            if(contour.toArray().length > 0){
-                newContour = new MatOfPoint2f(contour.toArray());
-                approxPolyDP(newContour, newContour, (0.0001 * arcLength(newContour,true)), true);
-                if(newContour.toArray().length >= 60){
-                    filteredContours.add(new MatOfPoint(contour.toArray()));
-                    break;
-                }
-                newContour.release();
-                contour.release();
-            }
+        if (Color != null){
+            ProcessChannel(Color, input);
         }
-
-        drawContours(r,filteredContours,-1, white,2);
+        else {
+            List<MatOfPoint> RedResults = ProcessChannel(RED, input);
+            List<MatOfPoint> BlueResults = ProcessChannel(BLUE,input);
+        }
+        drawContours(c,filteredContours,-1, white,2);
         if (filteredContours.size() > 0){
             Moments M = Imgproc.moments(filteredContours.get(0));
 
@@ -84,41 +74,74 @@ public class TeamElementPipeline extends OpenCvPipeline {
 
             Point Center = new Point(cx,cy);
 
-            circle(r,Center,10,red);
+            circle(c,Center,10,red);
 
-            if (cx < r.width()/2.0) {
+            if (cx <= c.width()/3.0) {
                 Position = LEFT;
             }
-            else {
+            if (cx <= (c.width()/3.0) * 2) {
+                Position = CENTER;
+            }
+            if (cx >= (c.width()/3.0) * 2){
                 Position = RIGHT;
             }
         }
         else {
             Position = null;
         }
-
-        for (MatOfPoint m : filteredContours) {
-            m.release();
-        }
-
-        for (MatOfPoint m : contours){
-            m.release();
-        }
-
-        channels.clear();
-        contours.clear();
         filteredContours.clear();
-
-        return r;
+        contours.clear();
+        return c;
     }
 
 
     public String getPosition(){
-        if (Position != null) {
-            return Position;
+        return Position;
+    }
+    public void setColor(String C){
+        Color = C;
+    }
+    public String getColor(){
+        return Color;
+    }
+    public List<MatOfPoint> ProcessChannel(String Color, Mat input){
+        Core.split(input,channels);
+        int ColorChannel;
+        int OtherChannel;
+        if (Color == RED){
+            ColorChannel = 0;
         }
         else {
-            return null;
+            ColorChannel = 2;
         }
+        if (ColorChannel == 0){
+            OtherChannel = 2;
+        }
+        else {
+            OtherChannel = 0;
+        }
+        c = channels.get(ColorChannel);
+        divide(channels.get(1),new Scalar(2),channels.get(1));
+        divide(channels.get(OtherChannel),new Scalar(2),channels.get(OtherChannel));
+        subtract(c,channels.get(1),c);
+        subtract(c,channels.get(OtherChannel),c);
+
+        threshold(c,grayImg,80d,255,THRESH_BINARY);
+
+        Imgproc.findContours(grayImg,contours,hierarchy,Imgproc.RETR_TREE,Imgproc.CHAIN_APPROX_SIMPLE);
+
+        for(MatOfPoint contour : contours){
+            if(contour.toArray().length > 0){
+                newContour = new MatOfPoint2f(contour.toArray());
+                approxPolyDP(newContour, newContour, (0.0001 * arcLength(newContour,true)), true);
+                if(newContour.toArray().length >= 200){
+                    filteredContours.add(new MatOfPoint(contour.toArray()));
+                    break;
+                }
+                newContour.release();
+                contour.release();
+            }
+        }
+        return filteredContours;
     }
 }

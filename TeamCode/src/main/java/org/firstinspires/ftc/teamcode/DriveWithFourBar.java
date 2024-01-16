@@ -15,6 +15,9 @@ public class DriveWithFourBar extends LinearOpMode {
     private DcMotorEx rear_right_drive;
     private DcMotorEx arm_motor_a;
     private DcMotorEx arm_motor_b;
+    private DcMotorEx conveyor_motor;
+    private double ConveyorSpeed = -.6;
+    private boolean ConveyorEnabled = false;
 
     private int[] motor_positions = {0,0,0,0,0};
 
@@ -27,6 +30,8 @@ public class DriveWithFourBar extends LinearOpMode {
         rear_left_drive = (DcMotorEx) hardwareMap.get(DcMotor.class, "rear_left_drive");
         front_right_drive = (DcMotorEx) hardwareMap.get(DcMotor.class, "front_right_drive");
         rear_right_drive = (DcMotorEx) hardwareMap.get(DcMotor.class, "rear_right_drive");
+
+        conveyor_motor = (DcMotorEx) hardwareMap.get(DcMotor.class,"ConveyorMotor");
 
         arm_motor_a = (DcMotorEx) hardwareMap.get(DcMotor.class, "FourBarLiftKitA");
         arm_motor_b = (DcMotorEx) hardwareMap.get(DcMotor.class, "FourBarLiftKitB");
@@ -50,6 +55,7 @@ public class DriveWithFourBar extends LinearOpMode {
             }
             arm_motor_a.setVelocity(0);
             arm_motor_b.setVelocity(0);
+            conveyor_motor.setPower(0);
         }
     }
 
@@ -82,16 +88,26 @@ public class DriveWithFourBar extends LinearOpMode {
         float LeftArmY = -gamepad2.left_stick_y;
         float RightArmY = gamepad2.right_stick_y;
 
+        //Conveyor Controls
+        boolean RightBumper = gamepad2.right_bumper;
+
+        if (RightBumper){
+            ConveyorEnabled = !ConveyorEnabled;
+        }
+
         ControlArm(arm_motor_a,RightArmY);
         ControlArm(arm_motor_b,LeftArmY);
 
         vertical = SpeedFormula(LeftStickY) * 2700;
         horizontal = SpeedFormula(LeftStickX) * 2700;
         pivot = SpeedFormula(-RightStickX) * 2700;
-        //((DcMotorEx) front_left_drive).setVelocity((vertical - horizontal) + pivot);
-        //((DcMotorEx) front_right_drive).setVelocity((vertical + horizontal) - pivot);
-        //((DcMotorEx) rear_left_drive).setVelocity(vertical + horizontal + pivot);
-        //((DcMotorEx) rear_right_drive).setVelocity((vertical - horizontal) - pivot);
+
+        conveyor_motor.setPower(ConveyorSpeed * (ConveyorEnabled ? 1 : 0));
+
+        ((DcMotorEx) front_left_drive).setVelocity((vertical - horizontal) + pivot);
+        ((DcMotorEx) front_right_drive).setVelocity((vertical + horizontal) - pivot);
+        ((DcMotorEx) rear_left_drive).setVelocity(vertical + horizontal + pivot);
+        ((DcMotorEx) rear_right_drive).setVelocity((vertical - horizontal) - pivot);
     }
     private double SpeedFormula(float x){
         return x/3 + 2.0/3.0*Math.pow(x,5);
