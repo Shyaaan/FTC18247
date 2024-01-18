@@ -29,12 +29,14 @@ import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
+import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvPipeline;
 import org.opencv.core.Mat;
 
 
 public class TeamElementPipeline extends OpenCvPipeline {
     public static String LEFT = "Left";
+    OpenCvCamera camera;
     public static String RIGHT = "Right";
     public static String CENTER = "Center";
     public static String RED = "Red";
@@ -54,6 +56,10 @@ public class TeamElementPipeline extends OpenCvPipeline {
     Scalar red = new Scalar(255,0,0);
 
     public Mat processFrame(Mat input){
+        if (!Vision.getInstance().OpmodeStatus()){
+            camera.closeCameraDevice();
+            return input;
+        }
         grayImg.release();
         hierarchy.release();
         c.release();
@@ -143,5 +149,8 @@ public class TeamElementPipeline extends OpenCvPipeline {
             }
         }
         return filteredContours;
+    }
+    public void setCamera(OpenCvCamera c){
+        camera = c;
     }
 }

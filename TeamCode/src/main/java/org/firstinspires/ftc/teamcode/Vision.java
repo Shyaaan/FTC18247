@@ -42,7 +42,7 @@ public class Vision extends LinearOpMode{
         put("LeftRed",4);
         put("CenterRed",5);
         put("RightRed",6);
-    }};;
+    }};
 
     private AprilTagProcessor aprilTag;
     private VisionPortal visionPortal;
@@ -71,6 +71,7 @@ public class Vision extends LinearOpMode{
             }
         });
 
+        yourPipeline.setCamera(camera);
         camera.setPipeline(yourPipeline);
 
 
@@ -108,20 +109,15 @@ public class Vision extends LinearOpMode{
             if (currentDetections.size() > 0){
                 yourPipeline.setColor(getColorFromTag(currentDetections.get(0).id));
             }
-            while (opModeIsActive()){
-                sleep(20);
-
+            while (opModeIsActive() && !isStopRequested()){
+                telemetry.addLine(String.valueOf(opModeIsActive()));
                 telemetry.addLine(yourPipeline.getPosition());
                 telemetry.addLine(yourPipeline.getColor());
-                if (yourPipeline.getColor() != null && yourPipeline.getPosition() != null){
-                    Integer tag_id = getTagId(yourPipeline.getColor(), yourPipeline.getPosition());
-                    telemetry.addLine(String.valueOf(tag_id));
-                }
-
                 telemetry.update();
             }
-            drive(0,0,0);
         }
+        camera.closeCameraDevice();
+        return;
     }
     public void drive(double vertical, double horizontal, double pivot){
         front_left_drive.setVelocity((vertical - horizontal) + pivot);
@@ -218,7 +214,7 @@ public class Vision extends LinearOpMode{
 
         // Set and enable the processor.
         builder.addProcessor(aprilTag);
-
+        builder.enableLiveView(false);
         // Build the Vision Portal, using the above settings.
         visionPortal = builder.build();
 
@@ -226,4 +222,7 @@ public class Vision extends LinearOpMode{
         //visionPortal.setProcessorEnabled(aprilTag, true);
 
     }   // end method initAprilTag()
+    public boolean OpmodeStatus(){
+        return opModeIsActive();
+    }
 }
