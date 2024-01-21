@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
-@TeleOp(name = "Drive_With_FourBarV1")
+//@TeleOp(name = "Drive_With_FourBarV1")
 public class DriveWithFourBarOneArmBackup extends LinearOpMode {
 
     private DcMotorEx front_left_drive;

@@ -98,26 +98,34 @@ public class Vision extends LinearOpMode{
             else {
                 driveTarget(-200,0,200,0);
             }
-            if (yourPipeline.getPosition() == yourPipeline.LEFT){
+            if (yourPipeline.getPosition() == yourPipeline.CENTER){
                 ObjectPosition = yourPipeline.LEFT;
             }
             else {
                 ObjectPosition = yourPipeline.RIGHT;
             }
+
+
             driveTarget(-100,0,0,100);
+            if (!opModeIsActive()){
+                visionPortal.close();
+                return;
+            }
             List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+
             if (currentDetections.size() > 0){
                 yourPipeline.setColor(getColorFromTag(currentDetections.get(0).id));
             }
-            while (opModeIsActive() && !isStopRequested()){
+
+            while (opModeIsActive()){
                 telemetry.addLine(String.valueOf(opModeIsActive()));
                 telemetry.addLine(yourPipeline.getPosition());
                 telemetry.addLine(yourPipeline.getColor());
                 telemetry.update();
+                sleep(20);
             }
         }
-        camera.closeCameraDevice();
-        return;
+        visionPortal.close();
     }
     public void drive(double vertical, double horizontal, double pivot){
         front_left_drive.setVelocity((vertical - horizontal) + pivot);

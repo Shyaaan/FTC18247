@@ -1,10 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 
-import static org.opencv.core.Core.REDUCE_AVG;
 import static org.opencv.core.Core.divide;
 
 import static org.opencv.core.Core.subtract;
@@ -54,10 +52,12 @@ public class TeamElementPipeline extends OpenCvPipeline {
 
     Scalar white = new Scalar(255,255,255);
     Scalar red = new Scalar(255,0,0);
-
+    private void cameraClosed(){
+        ;
+    }
     public Mat processFrame(Mat input){
         if (!Vision.getInstance().OpmodeStatus()){
-            camera.closeCameraDevice();
+            camera.closeCameraDeviceAsync(this::cameraClosed);
             return input;
         }
         grayImg.release();
@@ -80,17 +80,9 @@ public class TeamElementPipeline extends OpenCvPipeline {
 
             Point Center = new Point(cx,cy);
 
-            circle(c,Center,10,red);
+            circle(c,Center,100,red);
 
-            if (cx <= c.width()/3.0) {
-                Position = LEFT;
-            }
-            if (cx <= (c.width()/3.0) * 2) {
-                Position = CENTER;
-            }
-            if (cx >= (c.width()/3.0) * 2){
-                Position = RIGHT;
-            }
+            Position = CENTER;
         }
         else {
             Position = null;

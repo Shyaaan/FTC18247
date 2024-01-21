@@ -7,8 +7,11 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
-@TeleOp(name = "Drive_With_FourBarV2")
-public class DriveWithFourBar extends LinearOpMode {
+import java.util.HashMap;
+import java.util.Map;
+
+@TeleOp(name = "Drive_With_FourBarV2.1")
+public class FourBarSetPosition extends LinearOpMode {
 
     private DcMotorEx front_left_drive;
     private DcMotorEx rear_left_drive;
@@ -18,13 +21,30 @@ public class DriveWithFourBar extends LinearOpMode {
     private DcMotorEx arm_motor_b;
     private DcMotorEx conveyor_motor;
     private Servo conveyor_gate;
-    private double ConveyorSpeed = -.6;
+    private final double ConveyorSpeed = -.6;
     private boolean ConveyorEnabled = false;
     private boolean SlowMode = true;
     private boolean Updated = false;
     private boolean GateOpened = false;
 
     private int[] motor_positions = {0,0,0,0,0};
+    private static final Map<String,Integer> ARM_THREE = new HashMap<String,Integer>(){{
+        put("A",0);
+        put("B",0);
+    }};
+    private static final Map<String,Integer> ARM_TWO = new HashMap<String,Integer>(){{
+        put("A",0);
+        put("B",0);
+    }};
+    private static final Map<String,Integer> ARM_ONE = new HashMap<String,Integer>(){{
+        put("A",0);
+        put("B",0);
+    }};
+    private static final Map<String,Integer> ARM_ZERO = new HashMap<String,Integer>(){{
+        put("A",0);
+        put("B",0);
+    }};
+    private Map<String, Integer> CurrentArmPosition = ARM_ZERO;
 
     /**
      * This function is executed when this Op Mode is selected from the Driver Station.
@@ -38,6 +58,7 @@ public class DriveWithFourBar extends LinearOpMode {
 
         conveyor_motor = (DcMotorEx) hardwareMap.get(DcMotor.class,"ConveyorMotor");
         conveyor_gate = hardwareMap.get(Servo.class,"PixelsShallNotPass");
+        conveyor_gate.setPosition(.5);
 
         arm_motor_a = (DcMotorEx) hardwareMap.get(DcMotor.class, "FourBarLiftKitA");
         arm_motor_b = (DcMotorEx) hardwareMap.get(DcMotor.class, "FourBarLiftKitB");
@@ -46,7 +67,8 @@ public class DriveWithFourBar extends LinearOpMode {
         // Put initialization blocks here.
         front_left_drive.setDirection(DcMotorSimple.Direction.REVERSE);
         rear_left_drive.setDirection(DcMotorSimple.Direction.REVERSE);
-
+        telemetry.addLine("Limits and controls will not operate correctly if the robot's arms do not start as low as they can go.");
+        telemetry.update();
         waitForStart();
 
         if (opModeIsActive()) {
@@ -55,7 +77,9 @@ public class DriveWithFourBar extends LinearOpMode {
                 // Put loop blocks here.
                 int position = arm_motor_a.getCurrentPosition();
                 drive();
-                telemetry.addLine("Motor A Position: " + position);
+                telemetry.addLine("Motor A ID: " + arm_motor_a.getPortNumber());
+                telemetry.addLine("Motor B ID: " + arm_motor_b.getPortNumber());
+
                 telemetry.update();
                 sleep(20);
             }
@@ -79,7 +103,6 @@ public class DriveWithFourBar extends LinearOpMode {
         double Individual;
 
         //Drive controls
-
         float LeftStickY = -gamepad1.left_stick_y;
         LeftStickY = Math.round(LeftStickY);
         float LeftStickX = -gamepad1.left_stick_x;
@@ -90,7 +113,6 @@ public class DriveWithFourBar extends LinearOpMode {
         RightStickY = Math.round(RightStickY);
 
         //Arm controls
-
         float LeftArmY = -gamepad2.left_stick_y;
         float RightArmY = gamepad2.right_stick_y;
 
@@ -114,16 +136,32 @@ public class DriveWithFourBar extends LinearOpMode {
         else {
             Updated = false;
         }
+        if (-.66 >= LeftArmY)
+        {
+            CurrentArmPosition = ARM_THREE;
+        }
+        if ((-.66 < LeftArmY) && (LeftArmY <= -.33)){
+            CurrentArmPosition = ARM_TWO;
 
-        ControlArm(arm_motor_a,RightArmY);
-        ControlArm(arm_motor_b,LeftArmY);
+        }
+        if ((-.33 < LeftArmY) && (LeftArmY <= 0.0)){
+            CurrentArmPosition = ARM_ONE;
+        }
+        if (LeftArmY >= 0) {
+            CurrentArmPosition = ARM_ZERO;
+        }
+
+        //ControlArm(arm_motor_a,RightArmY);
+        //ControlArm(arm_motor_b,LeftArmY);
 
         vertical = SpeedFormula(LeftStickY) * 2700;
         horizontal = SpeedFormula(LeftStickX) * 2700;
         pivot = SpeedFormula(-RightStickX) * 2700;
 
         conveyor_motor.setPower(ConveyorSpeed * (ConveyorEnabled ? 1 : 0));
-        conveyor_gate.setPosition(GateOpened ? .9 : .1);
+        conveyor_gate.setPosition(GateOpened ? .75 : .25);
+
+        setArmPosition(CurrentArmPosition);
 
         ((DcMotorEx) front_left_drive).setVelocity((vertical - horizontal) + pivot);
         ((DcMotorEx) front_right_drive).setVelocity((vertical + horizontal) - pivot);
@@ -168,5 +206,15 @@ public class DriveWithFourBar extends LinearOpMode {
         motor.setVelocity(0);
         motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+    private void setArmPosition(Map<String,Integer> Position){
+        arm_motor_a.setTargetPosition(Position.get("A"));
+        arm_motor_b.setTargetPosition(Position.get("B"));
+        arm_motor_a.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        arm_motor_b.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        telemetry.addLine("Motor: " + arm_motor_b.getPortNumber() + " Position: " + arm_motor_b.getCurrentPosition());
+        telemetry.addLine("Run Mode: " + arm_motor_b.getMode().toString() + " Target Position: " + arm_motor_b.getTargetPosition());
+        telemetry.addLine("Motor: " + arm_motor_a.getPortNumber() + " Position: " + arm_motor_a.getCurrentPosition());
+        telemetry.addLine("Run Mode: " + arm_motor_a.getMode().toString() + " Target Position: " + arm_motor_a.getTargetPosition());
     }
 }
