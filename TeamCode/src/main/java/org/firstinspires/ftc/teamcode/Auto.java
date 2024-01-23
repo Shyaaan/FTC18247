@@ -14,6 +14,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.openftc.easyopencv.OpenCvCamera;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -26,8 +27,9 @@ public class Auto extends LinearOpMode{
     private DcMotorEx rear_right_drive;
 
     private AprilTagProcessor aprilTag;
+    private AprilTagDetection TargetTag;
     private VisionPortal visionPortal;
-    private boolean hasPixel;
+    private boolean hasPixel = false;
 
     private static final boolean USE_WEBCAM = true;  // true for webcam, false for phone camera
     private AprilTagDetection TargetTag = null;
@@ -46,11 +48,14 @@ public class Auto extends LinearOpMode{
 
         if (opModeIsActive()) {
             while (opModeIsActive()){
+
                 if (hasPixel){
-                    DropPixel();
+                    ;
                 }
                 else {
-                    getPixel;
+                    if (TargetTag == null){
+                        driveTilTag();
+                    }
                 }
                 telemetry.update();
                 sleep(20);
@@ -81,6 +86,22 @@ public class Auto extends LinearOpMode{
             RL = rear_left_drive.getCurrentPosition();
         }
         drive(0,0,0);
+    }
+    public boolean driveTilTag(int targetId) {
+        //*
+        TargetTag = null;
+        int loops = 0;
+        while (loops <= 360) {
+            driveTarget(100,0,0,100);
+            List<AprilTagDetection> CurrentDetections = aprilTag.getDetections();
+            for (AprilTagDetection detection : CurrentDetections){
+                if (detection.id == targetId){
+                    TargetTag = detection;
+                    return true;
+                }
+            }
+        }
+        return false;
     }
     private int getTagId(String Color, String Position){
         return tag_map.get(Position+Color);
