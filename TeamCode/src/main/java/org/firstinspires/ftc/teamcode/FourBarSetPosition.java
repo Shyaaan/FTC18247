@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import java.util.HashMap;
 import java.util.Map;
 
-@TeleOp(name = "Drive_With_FourBarV2.1")
+@TeleOp(name = "DriveFourBarV2.1.0")
 public class FourBarSetPosition extends LinearOpMode {
 
     private DcMotorEx front_left_drive;
@@ -62,8 +62,10 @@ public class FourBarSetPosition extends LinearOpMode {
 
         arm_motor_a = (DcMotorEx) hardwareMap.get(DcMotor.class, "FourBarLiftKitA");
         arm_motor_b = (DcMotorEx) hardwareMap.get(DcMotor.class, "FourBarLiftKitB");
+
         ResetMotor(arm_motor_a);
         ResetMotor(arm_motor_b);
+
         // Put initialization blocks here.
         front_left_drive.setDirection(DcMotorSimple.Direction.REVERSE);
         rear_left_drive.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -115,6 +117,10 @@ public class FourBarSetPosition extends LinearOpMode {
         //Arm controls
         float LeftArmY = -gamepad2.left_stick_y;
         float RightArmY = gamepad2.right_stick_y;
+        boolean PadDown = gamepad2.dpad_down;
+        boolean PadUp = gamepad2.dpad_up;
+        boolean PadLeft = gamepad2.dpad_left;
+        boolean PadRight = gamepad2.dpad_right;
 
         //Conveyor Controls
         boolean RightBumper_2 = gamepad2.right_bumper;
@@ -136,19 +142,18 @@ public class FourBarSetPosition extends LinearOpMode {
         else {
             Updated = false;
         }
-        if (-.66 >= LeftArmY)
-        {
+
+        if (PadRight){
+            CurrentArmPosition = ARM_ZERO;
+        }
+        if (PadUp){
             CurrentArmPosition = ARM_THREE;
         }
-        if ((-.66 < LeftArmY) && (LeftArmY <= -.33)){
+        if (PadLeft){
             CurrentArmPosition = ARM_TWO;
-
         }
-        if ((-.33 < LeftArmY) && (LeftArmY <= 0.0)){
+        if (PadDown){
             CurrentArmPosition = ARM_ONE;
-        }
-        if (LeftArmY >= 0) {
-            CurrentArmPosition = ARM_ZERO;
         }
 
         //ControlArm(arm_motor_a,RightArmY);
@@ -201,7 +206,7 @@ public class FourBarSetPosition extends LinearOpMode {
     }
     private void ResetMotor(DcMotorEx motor) {
         motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motor.setVelocity(-100);
+        motor.setVelocity(-300);
         sleep(100);
         motor.setVelocity(0);
         motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -212,6 +217,8 @@ public class FourBarSetPosition extends LinearOpMode {
         arm_motor_b.setTargetPosition(Position.get("B"));
         arm_motor_a.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         arm_motor_b.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        arm_motor_a.setPower(.5);
+        arm_motor_b.setPower(.5);
         telemetry.addLine("Motor: " + arm_motor_b.getPortNumber() + " Position: " + arm_motor_b.getCurrentPosition());
         telemetry.addLine("Run Mode: " + arm_motor_b.getMode().toString() + " Target Position: " + arm_motor_b.getTargetPosition());
         telemetry.addLine("Motor: " + arm_motor_a.getPortNumber() + " Position: " + arm_motor_a.getCurrentPosition());

@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
-@TeleOp(name = "Drive_With_FourBarV2")
+@TeleOp(name = "DriveFourBarV2.0.1")
 public class DriveWithFourBar extends LinearOpMode {
 
     private DcMotorEx front_left_drive;
@@ -21,7 +21,7 @@ public class DriveWithFourBar extends LinearOpMode {
     private double ConveyorSpeed = -.6;
     private boolean ConveyorEnabled = false;
     private boolean SlowMode = true;
-    private boolean Updated = false;
+    private boolean SpeedUpdated = false;
     private boolean GateOpened = false;
 
     private int[] motor_positions = {0,0,0,0,0};
@@ -97,22 +97,28 @@ public class DriveWithFourBar extends LinearOpMode {
         //Conveyor Controls
         boolean RightBumper_2 = gamepad2.right_bumper;
         boolean LeftBumper_2 = gamepad2.left_bumper;
+        boolean Y_2 = gamepad2.y;
 
         //Speed Controls
         boolean LeftBumper_1 = gamepad1.left_bumper;
 
         if (RightBumper_2){
-            ConveyorEnabled = !ConveyorEnabled;
+            ConveyorEnabled = true;
+            ConveyorSpeed = -.6;
         }
         if (LeftBumper_2){
-            GateOpened = !GateOpened;
+            ConveyorEnabled = true;
+            ConveyorSpeed = .6;
         }
-        if (!Updated && LeftBumper_1){
+        if (Y_2){
+            ConveyorEnabled = false;
+        }
+        if (!SpeedUpdated && LeftBumper_1){
             SlowMode = !SlowMode;
-            Updated = true;
+            SpeedUpdated = true;
         }
         else {
-            Updated = false;
+            SpeedUpdated = false;
         }
 
         ControlArm(arm_motor_a,RightArmY);
@@ -123,7 +129,7 @@ public class DriveWithFourBar extends LinearOpMode {
         pivot = SpeedFormula(-RightStickX) * 2700;
 
         conveyor_motor.setPower(ConveyorSpeed * (ConveyorEnabled ? 1 : 0));
-        conveyor_gate.setPosition(GateOpened ? .9 : .1);
+        //conveyor_gate.setPosition(GateOpened ? .9 : .1);
 
         ((DcMotorEx) front_left_drive).setVelocity((vertical - horizontal) + pivot);
         ((DcMotorEx) front_right_drive).setVelocity((vertical + horizontal) - pivot);
@@ -163,7 +169,7 @@ public class DriveWithFourBar extends LinearOpMode {
     }
     private void ResetMotor(DcMotorEx motor) {
         motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motor.setVelocity(-100);
+        motor.setVelocity(-300);
         sleep(100);
         motor.setVelocity(0);
         motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);

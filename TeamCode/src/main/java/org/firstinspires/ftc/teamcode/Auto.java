@@ -1,83 +1,37 @@
 package org.firstinspires.ftc.teamcode;
 
 
-//import com.google.android.material.snackbar.Snackbar;
-
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
-import org.firstinspires.ftc.robotcore.internal.ui.UILocation;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.openftc.easyopencv.OpenCvCamera;
-import org.openftc.easyopencv.OpenCvCameraFactory;
-import org.openftc.easyopencv.OpenCvCameraRotation;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-@TeleOp(name="VisionV1.0.0")
-public class Vision extends LinearOpMode{
-    TeamElementPipeline yourPipeline = new TeamElementPipeline();
+@Autonomous(name="AutonomousV1.0.0")
+public class Auto extends LinearOpMode{
     OpenCvCamera camera;
     private DcMotorEx front_left_drive;
     private DcMotorEx rear_left_drive;
     private DcMotorEx front_right_drive;
     private DcMotorEx rear_right_drive;
-    private String ObjectPosition;
-    private static Vision Instance;
-    private Map<String, Integer> tag_map = new HashMap<String, Integer>() {{
-        put("LeftBlue", 1);
-        put("CenterBlue", 2);
-        put("RightBlue",3);
-        put("LeftRed",4);
-        put("CenterRed",5);
-        put("RightRed",6);
-    }};
 
     private AprilTagProcessor aprilTag;
     private VisionPortal visionPortal;
+    private boolean hasPixel;
 
     private static final boolean USE_WEBCAM = true;  // true for webcam, false for phone camera
     private AprilTagDetection TargetTag = null;
-    public void initCamera(){
-        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
-        WebcamName webcamName = hardwareMap.get(WebcamName.class, "Webcam 1");
-        camera = OpenCvCameraFactory.getInstance().createWebcam(webcamName, cameraMonitorViewId);
-        camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
-        {
-            @Override
-            public void onOpened()
-            {
-                AppUtil.getInstance().showToast(UILocation.ONLY_LOCAL, "Camera opened, starting stream.");
-                camera.startStreaming(640, 480, OpenCvCameraRotation.UPRIGHT);
-
-            }
-            @Override
-            public void onError(int errorCode)
-            {
-                System.out.println(errorCode);
-                AppUtil.getInstance().showToast(UILocation.ONLY_LOCAL, "Error Starting Camera! Error #" + errorCode);
-                telemetry.addLine("Camera Error: " + errorCode);
-            }
-        });
-
-        yourPipeline.setCamera(camera);
-        camera.setPipeline(yourPipeline);
-
-
-    }
     public void runOpMode(){
-        Instance = this;
         front_left_drive = (DcMotorEx) hardwareMap.get(DcMotor.class, "front_left_drive");
         rear_left_drive = (DcMotorEx) hardwareMap.get(DcMotor.class, "rear_left_drive");
         front_right_drive = (DcMotorEx) hardwareMap.get(DcMotor.class, "front_right_drive");
@@ -87,40 +41,17 @@ public class Vision extends LinearOpMode{
         front_left_drive.setDirection(DcMotorSimple.Direction.REVERSE);
         rear_left_drive.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        initCamera();
         initAprilTag();
         waitForStart();
 
         if (opModeIsActive()) {
-            if (yourPipeline.getPosition() == yourPipeline.CENTER){
-                ObjectPosition = yourPipeline.CENTER;
-            }
-            else {
-                driveTarget(-200,0,200,0);
-            }
-            if (yourPipeline.getPosition() == yourPipeline.CENTER){
-                ObjectPosition = yourPipeline.LEFT;
-            }
-            else {
-                ObjectPosition = yourPipeline.RIGHT;
-            }
-
-
-            driveTarget(-100,0,0,100);
-            if (!opModeIsActive()){
-                visionPortal.close();
-                return;
-            }
-            List<AprilTagDetection> currentDetections = aprilTag.getDetections();
-
-            if (currentDetections.size() > 0){
-                yourPipeline.setColor(getColorFromTag(currentDetections.get(0).id));
-            }
-
             while (opModeIsActive()){
-                telemetry.addLine(String.valueOf(opModeIsActive()));
-                telemetry.addLine(yourPipeline.getPosition());
-                telemetry.addLine(yourPipeline.getColor());
+                if (hasPixel){
+                    DropPixel();
+                }
+                else {
+                    getPixel;
+                }
                 telemetry.update();
                 sleep(20);
             }

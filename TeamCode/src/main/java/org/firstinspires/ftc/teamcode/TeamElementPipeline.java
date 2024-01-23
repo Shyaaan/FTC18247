@@ -35,10 +35,10 @@ import org.opencv.core.Mat;
 public class TeamElementPipeline extends OpenCvPipeline {
     public static String LEFT = "Left";
     OpenCvCamera camera;
-    public static String RIGHT = "Right";
-    public static String CENTER = "Center";
-    public static String RED = "Red";
-    public static String BLUE = "Blue";
+    public static final String RIGHT = "Right";
+    public static final String CENTER = "Center";
+    public static final String RED = "Red";
+    public static final String BLUE = "Blue";
     ArrayList<Mat> channels = new ArrayList<>(3);
     List<MatOfPoint> filteredContours = new ArrayList<>();
     List<MatOfPoint> contours = new ArrayList<>();
