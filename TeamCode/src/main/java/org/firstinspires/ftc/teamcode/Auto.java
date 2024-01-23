@@ -15,12 +15,9 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.openftc.easyopencv.OpenCvCamera;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 @Autonomous(name="AutonomousV1.0.0")
 public class Auto extends LinearOpMode{
-    OpenCvCamera camera;
     private DcMotorEx front_left_drive;
     private DcMotorEx rear_left_drive;
     private DcMotorEx front_right_drive;
@@ -32,7 +29,6 @@ public class Auto extends LinearOpMode{
     private boolean hasPixel = false;
 
     private static final boolean USE_WEBCAM = true;  // true for webcam, false for phone camera
-    private AprilTagDetection TargetTag = null;
     public void runOpMode(){
         front_left_drive = (DcMotorEx) hardwareMap.get(DcMotor.class, "front_left_drive");
         rear_left_drive = (DcMotorEx) hardwareMap.get(DcMotor.class, "rear_left_drive");
@@ -54,7 +50,10 @@ public class Auto extends LinearOpMode{
                 }
                 else {
                     if (TargetTag == null){
-                        driveTilTag();
+                        driveTilTag(7);
+                    }
+                    else {
+                    ;
                     }
                 }
                 telemetry.update();
@@ -77,8 +76,8 @@ public class Auto extends LinearOpMode{
             direction = -1;
         }
         Target += RL;
-        telemetry.addLine("Target: " + String.valueOf(Target));
-        telemetry.addLine("Position: " + String.valueOf(RL));
+        telemetry.addLine("Target: " + Target);
+        telemetry.addLine("Position: " + RL);
         telemetry.update();
         while ((direction*RL < direction*Target) && opModeIsActive()){
             drive(v * direction,h * direction,p * direction);
@@ -87,8 +86,8 @@ public class Auto extends LinearOpMode{
         }
         drive(0,0,0);
     }
-    public boolean driveTilTag(int targetId) {
-        //*
+
+    public void driveTilTag(int targetId) {
         TargetTag = null;
         int loops = 0;
         while (loops <= 360) {
@@ -97,36 +96,11 @@ public class Auto extends LinearOpMode{
             for (AprilTagDetection detection : CurrentDetections){
                 if (detection.id == targetId){
                     TargetTag = detection;
-                    return true;
+                    return;
                 }
             }
+            loops += 1;
         }
-        return false;
-    }
-    private int getTagId(String Color, String Position){
-        return tag_map.get(Position+Color);
-    }
-    private String getColorFromTag(int id){
-        String key = getKeyByValue(tag_map,id);
-        if (key.contains("Blue")){
-            return yourPipeline.BLUE;
-        }
-        else {
-            return yourPipeline.RED;
-        }
-    }
-    public static <T, E> T getKeyByValue(Map<T, E> map, E value) {
-        for (Map.Entry<T, E> entry : map.entrySet())
-            if (Objects.equals(value, entry.getValue())) {
-                return entry.getKey();
-            }
-        return null;
-    }
-    public void sendTelemetry(String String){
-        telemetry.addLine(String);
-    }
-    public static Vision getInstance(){
-        return Instance;
     }
     private void initAprilTag() {
 
@@ -182,7 +156,4 @@ public class Auto extends LinearOpMode{
         //visionPortal.setProcessorEnabled(aprilTag, true);
 
     }   // end method initAprilTag()
-    public boolean OpmodeStatus(){
-        return opModeIsActive();
-    }
 }
