@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
-@TeleOp(name = "DriveV1")
+@TeleOp(name = "PlainDrive")
 public class Drive_AndroidStudio_V1 extends LinearOpMode {
 
     private DcMotor front_left_drive;

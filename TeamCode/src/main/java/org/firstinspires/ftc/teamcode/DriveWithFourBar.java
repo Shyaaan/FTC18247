@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
-@TeleOp(name = "DriveFourBarV2.0.1")
+@TeleOp(name = "DriveManual")
 public class DriveWithFourBar extends LinearOpMode {
 
     private DcMotorEx front_left_drive;
@@ -17,12 +17,10 @@ public class DriveWithFourBar extends LinearOpMode {
     private DcMotorEx arm_motor_a;
     private DcMotorEx arm_motor_b;
     private DcMotorEx conveyor_motor;
-    private Servo conveyor_gate;
     private double ConveyorSpeed = -.6;
     private boolean ConveyorEnabled = false;
     private boolean SlowMode = true;
     private boolean SpeedUpdated = false;
-    private boolean GateOpened = false;
 
     private int[] motor_positions = {0,0,0,0,0};
 
@@ -36,13 +34,17 @@ public class DriveWithFourBar extends LinearOpMode {
         front_right_drive = (DcMotorEx) hardwareMap.get(DcMotor.class, "front_right_drive");
         rear_right_drive = (DcMotorEx) hardwareMap.get(DcMotor.class, "rear_right_drive");
 
-        conveyor_motor = (DcMotorEx) hardwareMap.get(DcMotor.class,"ConveyorMotor");
-        conveyor_gate = hardwareMap.get(Servo.class,"PixelsShallNotPass");
+        conveyor_motor = (DcMotorEx) hardwareMap.get(DcMotor.class,"ConveyorMotor");;
 
         arm_motor_a = (DcMotorEx) hardwareMap.get(DcMotor.class, "FourBarLiftKitA");
         arm_motor_b = (DcMotorEx) hardwareMap.get(DcMotor.class, "FourBarLiftKitB");
+
         ResetMotor(arm_motor_a);
         ResetMotor(arm_motor_b);
+
+        arm_motor_a.setVelocityPIDFCoefficients(10,1,0,20);
+        arm_motor_b.setVelocityPIDFCoefficients(10,1,0,20);
+
         // Put initialization blocks here.
         front_left_drive.setDirection(DcMotorSimple.Direction.REVERSE);
         rear_left_drive.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -73,10 +75,6 @@ public class DriveWithFourBar extends LinearOpMode {
         double vertical;
         double horizontal;
         double pivot;
-
-        //Arm variables
-        double Collective;
-        double Individual;
 
         //Drive controls
 
@@ -121,8 +119,8 @@ public class DriveWithFourBar extends LinearOpMode {
             SpeedUpdated = false;
         }
 
-        ControlArm(arm_motor_a,RightArmY);
-        ControlArm(arm_motor_b,LeftArmY);
+        ControlArm(arm_motor_a,RightArmY,450);
+        ControlArm(arm_motor_b,LeftArmY,450);
 
         vertical = SpeedFormula(LeftStickY) * 2700;
         horizontal = SpeedFormula(LeftStickX) * 2700;
@@ -137,10 +135,9 @@ public class DriveWithFourBar extends LinearOpMode {
         ((DcMotorEx) rear_right_drive).setVelocity((vertical - horizontal) - pivot);
     }
     private double SpeedFormula(float x){
-        return (SlowMode ? 1.0 : 1.0/4.0) * (x/3.0 + 2.0/3.0*Math.pow(x,5));
+        return (SlowMode ? 1.0/4.0 : 1.0) * (x/3.0 + 2.0/3.0*Math.pow(x,5));
     }
-    private void ControlArm(DcMotorEx motor, float controller) {
-        double speed_coefficient = 450;
+    private void ControlArm(DcMotorEx motor, float controller,double speed_coefficient) {
         double speed = speed_coefficient * controller;
         
         int position =  motor.getCurrentPosition();
@@ -152,7 +149,9 @@ public class DriveWithFourBar extends LinearOpMode {
         if (position <= .995 * limit) {
             speed = speed_coefficient;
         }
-
+        if (arm_motor_b.getCurrentPosition() < -1200) {
+            speed = 4.0/5.0 * speed;
+        }
         if (Math.abs(speed) > 5) {
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             motor.setVelocity(speed);

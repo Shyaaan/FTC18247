@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -10,7 +11,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import java.util.HashMap;
 import java.util.Map;
 
-@TeleOp(name = "DriveFourBarV2.1.0")
+@TeleOp(name = "DriveAutomated")
 public class FourBarSetPosition extends LinearOpMode {
 
     private DcMotorEx front_left_drive;
@@ -29,8 +30,8 @@ public class FourBarSetPosition extends LinearOpMode {
 
     private int[] motor_positions = {0,0,0,0,0};
     private static final Map<String,Integer> ARM_THREE = new HashMap<String,Integer>(){{
-        put("A",0);
-        put("B",0);
+        put("A",-1360);
+        put("B",-1360);
     }};
     private static final Map<String,Integer> ARM_TWO = new HashMap<String,Integer>(){{
         put("A",0);
@@ -45,6 +46,9 @@ public class FourBarSetPosition extends LinearOpMode {
         put("B",0);
     }};
     private Map<String, Integer> CurrentArmPosition = ARM_ZERO;
+
+    private int TargetA = 0;
+    private int TargetB = 0;
 
     /**
      * This function is executed when this Op Mode is selected from the Driver Station.
@@ -72,6 +76,7 @@ public class FourBarSetPosition extends LinearOpMode {
         telemetry.addLine("Limits and controls will not operate correctly if the robot's arms do not start as low as they can go.");
         telemetry.update();
         waitForStart();
+        processArm();
 
         if (opModeIsActive()) {
             // Put run blocks here.
@@ -99,10 +104,6 @@ public class FourBarSetPosition extends LinearOpMode {
         double vertical;
         double horizontal;
         double pivot;
-
-        //Arm variables
-        double Collective;
-        double Individual;
 
         //Drive controls
         float LeftStickY = -gamepad1.left_stick_y;
@@ -176,34 +177,6 @@ public class FourBarSetPosition extends LinearOpMode {
     private double SpeedFormula(float x){
         return (SlowMode ? 1.0 : 1.0/4.0) * (x/3.0 + 2.0/3.0*Math.pow(x,5));
     }
-    private void ControlArm(DcMotorEx motor, float controller) {
-        double speed_coefficient = 450;
-        double speed = speed_coefficient * controller;
-        
-        int position =  motor.getCurrentPosition();
-        int limit = -2220;
-
-        if (position <= .95 * limit){
-            speed = 1.0/2.0*speed;
-        }
-        if (position <= .995 * limit) {
-            speed = speed_coefficient;
-        }
-
-        if (Math.abs(speed) > 5) {
-            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            motor.setVelocity(speed);
-            motor_positions[motor.getPortNumber()] = position;
-        }
-        else {
-            motor.setTargetPosition(motor_positions[motor.getPortNumber()]);
-            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            motor.setPower(.3);
-        }
-        telemetry.addLine("Motor: " + motor.getPortNumber() + " Position: " + motor.getCurrentPosition());
-        telemetry.addLine("Controller: " + controller + " Speed: " + speed);
-        telemetry.addLine("Run Mode: " + motor.getMode().toString() + " Target Position: " + motor.getTargetPosition());
-    }
     private void ResetMotor(DcMotorEx motor) {
         motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motor.setVelocity(-300);
@@ -213,15 +186,34 @@ public class FourBarSetPosition extends LinearOpMode {
         motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
     private void setArmPosition(Map<String,Integer> Position){
-        arm_motor_a.setTargetPosition(Position.get("A"));
-        arm_motor_b.setTargetPosition(Position.get("B"));
-        arm_motor_a.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        arm_motor_b.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        arm_motor_a.setPower(.5);
-        arm_motor_b.setPower(.5);
+        TargetA = Position.get("A");
+        TargetB = Position.get("B");
         telemetry.addLine("Motor: " + arm_motor_b.getPortNumber() + " Position: " + arm_motor_b.getCurrentPosition());
-        telemetry.addLine("Run Mode: " + arm_motor_b.getMode().toString() + " Target Position: " + arm_motor_b.getTargetPosition());
+        telemetry.addLine("Run Mode: " + arm_motor_b.getMode().toString());
         telemetry.addLine("Motor: " + arm_motor_a.getPortNumber() + " Position: " + arm_motor_a.getCurrentPosition());
-        telemetry.addLine("Run Mode: " + arm_motor_a.getMode().toString() + " Target Position: " + arm_motor_a.getTargetPosition());
+        telemetry.addLine("Run Mode: " + arm_motor_a.getMode().toString());
+    }
+    private void processArm() {
+        int RAISE_POINT = -1200;
+        boolean AtTargetPositionA = Math.abs(Math.round(arm_motor_a.getCurrentPosition() / 10.0) * 10 - TargetA) > 50.0;
+        boolean AtTargetPositionB = Math.abs(Math.round(arm_motor_b.getCurrentPosition() / 10.0) * 10 - TargetB) > 50.0;
+        if (!(AtTargetPositionA || AtTargetPositionB)) return;
+        if (TargetA + TargetB < RAISE_POINT && arm_motor_b.getCurrentPosition() > RAISE_POINT) {
+            arm_motor_b.setTargetPosition(RAISE_POINT);
+            arm_motor_b.setPower(.3);
+        }
+        if (TargetA + TargetB < RAISE_POINT && arm_motor_b.getCurrentPosition() <= RAISE_POINT) {
+            arm_motor_a.setTargetPosition(TargetA);
+            arm_motor_b.setTargetPosition(TargetB);
+            arm_motor_b.setPower(.15);
+        }
+        if (TargetA + TargetB > RAISE_POINT && arm_motor_b.getCurrentPosition() < RAISE_POINT) {
+            arm_motor_b.setTargetPosition(RAISE_POINT);
+            arm_motor_a.setTargetPosition(0);
+        }
+        if (TargetA + TargetB > RAISE_POINT && arm_motor_b.getCurrentPosition() > RAISE_POINT) {
+            arm_motor_a.setTargetPosition(TargetA);
+            arm_motor_b.setTargetPosition(TargetB);
+        }
     }
 }

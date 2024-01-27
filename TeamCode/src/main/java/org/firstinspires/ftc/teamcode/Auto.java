@@ -12,11 +12,10 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
-import org.openftc.easyopencv.OpenCvCamera;
 
 import java.util.List;
 
-@Autonomous(name="AutonomousV1.0.0")
+@Autonomous(name="ParkingV1.0.0")
 public class Auto extends LinearOpMode{
     private DcMotorEx front_left_drive;
     private DcMotorEx rear_left_drive;
@@ -27,6 +26,7 @@ public class Auto extends LinearOpMode{
     private AprilTagDetection TargetTag;
     private VisionPortal visionPortal;
     private boolean hasPixel = false;
+    private String TeamColor = "Not Found";
 
     private static final boolean USE_WEBCAM = true;  // true for webcam, false for phone camera
     public void runOpMode(){
@@ -39,26 +39,11 @@ public class Auto extends LinearOpMode{
         front_left_drive.setDirection(DcMotorSimple.Direction.REVERSE);
         rear_left_drive.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        initAprilTag();
         waitForStart();
 
         if (opModeIsActive()) {
-            while (opModeIsActive()){
-
-                if (hasPixel){
-                    ;
-                }
-                else {
-                    if (TargetTag == null){
-                        driveTilTag(7);
-                    }
-                    else {
-                    ;
-                    }
-                }
-                telemetry.update();
-                sleep(20);
-            }
+            driveTarget(300,600,0,0);
+            driveTarget(-1000,0,1000,0);
         }
         visionPortal.close();
     }
@@ -101,6 +86,29 @@ public class Auto extends LinearOpMode{
             }
             loops += 1;
         }
+    }
+
+    /**
+     * @param firstId
+     * @param secondId
+     * @return Integer of april tag found or -1 timed out.
+     */
+    public int driveTilEitherTag(int firstId, int secondId) {
+        TargetTag = null;
+        int loops = 0;
+        while (loops <= 360) {
+            driveTarget(100,0,0,100);
+            List<AprilTagDetection> CurrentDetections = aprilTag.getDetections();
+            for (AprilTagDetection detection : CurrentDetections){
+                if (detection.id == firstId || detection.id == secondId){
+                    //TargetTag = detection;
+                    return detection.id;
+                }
+
+            }
+            loops += 1;
+        }
+        return -1;
     }
     private void initAprilTag() {
 

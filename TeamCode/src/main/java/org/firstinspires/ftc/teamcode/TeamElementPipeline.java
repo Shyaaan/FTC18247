@@ -12,11 +12,10 @@ import static org.opencv.imgproc.Imgproc.approxPolyDP;
 import static org.opencv.imgproc.Imgproc.arcLength;
 
 import static org.opencv.imgproc.Imgproc.circle;
-import static org.opencv.imgproc.Imgproc.cornerEigenValsAndVecs;
 import static org.opencv.imgproc.Imgproc.drawContours;
 
-import static org.opencv.imgproc.Imgproc.drawMarker;
 import static org.opencv.imgproc.Imgproc.threshold;
+
 
 import org.opencv.core.Core;
 
@@ -30,7 +29,6 @@ import org.opencv.imgproc.Moments;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvPipeline;
 import org.opencv.core.Mat;
-
 
 public class TeamElementPipeline extends OpenCvPipeline {
     public static String LEFT = "Left";

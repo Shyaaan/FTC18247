@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 
 //import com.google.android.material.snackbar.Snackbar;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -24,7 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
+@Disabled
 @TeleOp(name="VisionV1.0.0")
 public class Vision extends LinearOpMode{
     TeamElementPipeline yourPipeline = new TeamElementPipeline();
